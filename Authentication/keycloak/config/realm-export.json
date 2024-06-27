@@ -1,0 +1,31 @@
+{
+  "realm": "ArtesianWell",
+  "enabled": true,
+  "users": [
+    {
+      "username": "testuser",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password"
+        }
+      ],
+      "realmRoles": ["cliente"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "artesianwell-client",
+      "enabled": true,
+      "redirectUris": ["http://localhost:5000/signin-oidc"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "cliente"
+      }
+    ]
+  }
+}
