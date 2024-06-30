@@ -21,8 +21,4 @@
       <ProjectReference Include="..\Authentication.Shared\Authentication.Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="UseCases\Authentication\Query\" />
-    </ItemGroup>
-
 </Project>

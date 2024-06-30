@@ -21,6 +21,9 @@ public class SignInQueryHandler(IAuthenticationService service, IMapper mapper):
         var response = await service.Login(loginRequest, cancellationToken);
         
         var result = mapper.Map<LoginDtoResponse, SignInResult>(response.Data);
+
+        result.Email = request.Key;
+        
         return ApiResponse<SignInResult>.Success(result);
     }
 }

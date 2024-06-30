@@ -1,3 +1,4 @@
+using Authentication.Application.UseCases.Authentication.Command.SignIn;
 using Authentication.Shared.Dto;
 using MediatR;
 

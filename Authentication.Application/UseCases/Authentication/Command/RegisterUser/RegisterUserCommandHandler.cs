@@ -23,6 +23,10 @@ public class RegisterUserCommandHandler(IAuthenticationService service, IMapper 
             var response = await service.SignUp(registerRequest, cancellationToken);
         
             var result = mapper.Map<SignUpDtoResponse, RegisterUserResult>(response.Data);
+
+            result.Name = request.Name;
+            result.Email = request.Email;
+                
             return ApiResponse<RegisterUserResult>.Success(result);
         }
         catch (Exception e)

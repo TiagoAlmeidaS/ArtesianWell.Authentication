@@ -4,8 +4,7 @@ public class LoginDtoResponse
 {
     public string Token { get; set; }
     public string RefreshToken { get; set; }
-    public string Name { get; set; }
-    public string TokenExpiration { get; set; }
+    public int TokenExpiration { get; set; }
 }
 
 public class LoginDtoRequest
