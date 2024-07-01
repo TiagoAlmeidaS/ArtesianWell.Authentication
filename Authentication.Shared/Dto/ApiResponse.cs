@@ -1,20 +1,15 @@
-using Authentication.Shared.Common;
-
 namespace Authentication.Shared.Dto;
 
 public class ApiResponse<T>
 {
     public T Data { get; set; }
     public List<ApiError> Errors { get; set; }
-    public bool HasError => Errors.Count > 0;
     public List<ApiWarning> Warnings { get; set; }
+
+    public bool HasError => Errors.Count > 0;
     public bool HasWarning => Warnings.Count > 0;
-    
-    public string GetFirstErrorMessage() => Errors.FirstOrDefault()?.ErrorMessage ?? MessagesConsts.ErrorDefault;
+    public string GetFirstErrorMessage() => Errors.FirstOrDefault()?.ErrorMessage ?? string.Empty;
     public int GetFirtsErrorCode() => Errors.FirstOrDefault().ErrorCode;
-    
-    public string GetFirstWarningMessage() => Warnings.FirstOrDefault()?.WarningMessage ?? MessagesConsts.WarningDefault;
-    public int GetFirstWarningCode() => Warnings.FirstOrDefault().WarningCode;
 
     public static ApiResponse<T> Success(T response)
     {
@@ -33,15 +28,17 @@ public class ApiResponse<T>
         return new ApiResponse<T> { Data = default(T), Errors = new List<ApiError>(), Warnings = warnings };
     }
 
-    public class ApiError
-    {
-        public int ErrorCode { get; set; }
-        public string ErrorMessage { get; set; }
-    }
+}
 
-    public class ApiWarning
-    {
-        public int WarningCode { get; set; }
-        public string WarningMessage { get; set; }
-    }
+public class ApiError
+{
+    public int ErrorCode { get; set; }
+    public string ErrorMessage { get; set; }
+    public string StackTrace { get; set; }
+}
+
+public class ApiWarning
+{
+    public string WarningCode { get; set; }
+    public string WarningMessage { get; set; }
 }
