@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Authentication.Application.UseCases.Authentication.Command.RegisterUser;
 
-public class RegisterUserCommand: IRequest<ApiResponse<RegisterUserResult>>
+public class RegisterUserCommand: IRequest<RegisterUserResult>
 {
     public string Name { get; set; }
     public string Email { get; set; }

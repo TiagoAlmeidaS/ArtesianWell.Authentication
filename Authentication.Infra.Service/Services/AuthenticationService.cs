@@ -108,8 +108,11 @@ public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSer
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            return ApiResponse<SignUpDtoResponse>.Error(new()
+            {
+                ErrorCode = (int) HttpStatusCode.InternalServerError,
+                ErrorMessage = e.Message
+            });
         }
     }
 
@@ -117,12 +120,13 @@ public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSer
     {
         try
         {
+            KeycloakConfig keycloak = new KeycloakConfig();
             var tokenRequest = KeycloakConsts.GetFormUrlAuthorizationKeycloak(new()
             {
-                GrantType = keycloakConfig.Value.GrantType,
-                Password = keycloakConfig.Value.Password,
-                UserName = keycloakConfig.Value.Username,
-                ClientId = keycloakConfig.Value.ClientId
+                GrantType = keycloak.GrantType,
+                Password = keycloak.Password,
+                UserName = keycloak.Username,
+                ClientId = keycloak.ClientId
             });
 
             var tokenResponse = await _httpClientAuthentication.PostAsync(KeycloakConsts.GetPathAuthorization, tokenRequest);

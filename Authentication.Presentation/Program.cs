@@ -2,6 +2,7 @@ using Authentication.Application;
 using Authentication.Infra.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Shared.Messages;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Services.InfraServiceExtension(builder.Configuration);
 builder.Services.ApplicationExtension();
+builder.Services.AddMessageHandling();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
