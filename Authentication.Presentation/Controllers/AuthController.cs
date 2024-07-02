@@ -1,13 +1,17 @@
 using Authentication.Application.UseCases.Authentication.Command.RegisterUser;
-using Authentication.Application.UseCases.Authentication.Query.SignIn;
+using Authentication.Application.UseCases.Authentication.Command.SignIn;
+using Authentication.Shared.Utils;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Messages;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Authentication.Presentation.Controllers;
 
-public class AuthController(ISender mediator): BaseController
+public class AuthController(
+    IMessageHandlerService errorWarningHandlingService,
+    IMediator mediator): ArtesianWellBaseController(errorWarningHandlingService)
 {
     
     [HttpPost("register")]
@@ -15,7 +19,8 @@ public class AuthController(ISender mediator): BaseController
     [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
     {
-        return await HandleRequestAsync(command, async _ => await mediator.Send(command, CancellationToken.None));
+        var result = await mediator.Send(command, CancellationToken.None);
+        return HandleResult(result);
     }
 
     [HttpPost("login")]
@@ -23,6 +28,7 @@ public class AuthController(ISender mediator): BaseController
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] SignInQuery query)
     {
-        return await HandleRequestAsync(query, async _ => await mediator.Send(query, CancellationToken.None));
+        var result = await mediator.Send(query, CancellationToken.None);
+        return HandleResult(result);
     }
 }

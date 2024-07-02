@@ -1,14 +1,15 @@
+using System.Net;
 using Authentication.Application.Services.Authentication;
 using Authentication.Application.Services.Authentication.Dtos;
-using Authentication.Shared.Dto;
 using AutoMapper;
 using MediatR;
+using Shared.Messages;
 
 namespace Authentication.Application.UseCases.Authentication.Command.RegisterUser;
 
-public class RegisterUserCommandHandler(IAuthenticationService service, IMapper mapper): IRequestHandler<RegisterUserCommand, ApiResponse<RegisterUserResult>>
+public class RegisterUserCommandHandler(IAuthenticationService service, IMapper mapper, IMessageHandlerService msg): IRequestHandler<RegisterUserCommand, RegisterUserResult>
 {
-    public async Task<ApiResponse<RegisterUserResult>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<RegisterUserResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -21,13 +22,36 @@ public class RegisterUserCommandHandler(IAuthenticationService service, IMapper 
             };
         
             var response = await service.SignUp(registerRequest, cancellationToken);
+
+            if (response.HasError)
+            {
+                msg.AddError()
+                    .WithErrorCode(Guid.NewGuid().ToString())
+                    .WithMessage($"Erro ao registrar o cliente.")
+                    .WithStackTrace(response.GetFirstErrorMessage())
+                    .WithStatusCode((HttpStatusCode) response.GetFirtsErrorCode())
+                    .Commit();
+                
+                return new ();
+            }
         
             var result = mapper.Map<SignUpDtoResponse, RegisterUserResult>(response.Data);
-            return ApiResponse<RegisterUserResult>.Success(result);
+
+            result.Name = request.Name;
+            result.Email = request.Email;
+
+            return result;
         }
         catch (Exception e)
         {
-            throw new Exception("Erro ao registrar usuário", e);
+            msg.AddError()
+                .WithErrorCode(Guid.NewGuid().ToString())
+                .WithMessage($"Erro ao registrar o cliente.")
+                .WithStackTrace(e.StackTrace)
+                .WithStatusCode(HttpStatusCode.BadRequest)
+                .Commit();
+
+            return new();
         }
     }
 }

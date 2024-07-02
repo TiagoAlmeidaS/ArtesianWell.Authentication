@@ -11,10 +11,11 @@ using Authentication.Shared.Common;
 using Authentication.Shared.Dto;
 using Authentication.Shared.Utils;
 using AutoMapper;
+using Microsoft.Extensions.Options;
 
 namespace Authentication.Infra.Service.Services;
 
-public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSerializerOptions jsonSerializerOptions, IMapper mapper)
+public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSerializerOptions jsonSerializerOptions, IMapper mapper, IOptions<KeycloakConfig> keycloakConfig)
     : IAuthenticationService
 {
     private HttpClient _httpClient = httpClientFactory.CreateClient(KeycloakConsts.GetNameApi);
@@ -57,9 +58,8 @@ public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSer
         try
         {
             var token = await GetTokenAdmin();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(KeycloakConsts.AuthorizationHeader, token);
 
-            // Create user
             var registerUser = new RegisterUserDto()
             {
                 Email = request.Email,
@@ -84,9 +84,7 @@ public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSer
             };
 
             var bodyRequest = new StringContent(JsonSerializer.Serialize(registerUser, jsonSerializerOptions), Encoding.UTF8, "application/json");
-
-            // var bodyRequest = ContentsUtils.GetHttpContent(registerUser, jsonSerializerOptions);
-
+            
             var userResponse = await _httpClient.PostAsync(KeycloakConsts.GetPathUsers, bodyRequest);
             var content = await userResponse.Content.ReadAsStringAsync();
 
@@ -110,8 +108,11 @@ public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSer
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            return ApiResponse<SignUpDtoResponse>.Error(new()
+            {
+                ErrorCode = (int) HttpStatusCode.InternalServerError,
+                ErrorMessage = e.Message
+            });
         }
     }
 
@@ -119,12 +120,13 @@ public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSer
     {
         try
         {
-            var tokenRequest = new FormUrlEncodedContent(new[]
+            KeycloakConfig keycloak = new KeycloakConfig();
+            var tokenRequest = KeycloakConsts.GetFormUrlAuthorizationKeycloak(new()
             {
-                new KeyValuePair<string, string>("client_id", "admin-cli"),
-                new KeyValuePair<string, string>("username", "admin"),
-                new KeyValuePair<string, string>("password", "admin"),
-                new KeyValuePair<string, string>("grant_type", "password")
+                GrantType = keycloak.GrantType,
+                Password = keycloak.Password,
+                UserName = keycloak.Username,
+                ClientId = keycloak.ClientId
             });
 
             var tokenResponse = await _httpClientAuthentication.PostAsync(KeycloakConsts.GetPathAuthorization, tokenRequest);
@@ -134,7 +136,7 @@ public class AuthenticationService(IHttpClientFactory httpClientFactory, JsonSer
             }
 
             var token = JsonDocument.Parse(await tokenResponse.Content.ReadAsStringAsync()).RootElement
-                .GetProperty("access_token").GetString();
+                .GetProperty(KeycloakConsts.AccessTokenHeader).GetString();
 
             return token ?? String.Empty;
         }
