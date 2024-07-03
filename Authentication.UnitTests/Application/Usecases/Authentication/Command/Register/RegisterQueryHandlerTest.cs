@@ -1,4 +1,6 @@
 using Authentication.Application.Services.Authentication;
+using AutoMapper;
+using Moq;
 
 namespace Authentication.UnitTests.Application.Usecases.Authentication.Command.Register;
 
