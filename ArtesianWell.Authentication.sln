@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auth", "serverless\Auth\Aut
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "serverless", "serverless", "{35F6CC7A-9495-4B7B-AA36-57CD546F157D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.Function", "Authentication.Function\Authentication.Function.csproj", "{D598B72E-EE4E-4169-993B-2B8B4D53CF33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,5 +80,9 @@ Global
 		{013EFD3B-912D-4947-A0F7-6B3FE66EF182}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{013EFD3B-912D-4947-A0F7-6B3FE66EF182}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{013EFD3B-912D-4947-A0F7-6B3FE66EF182}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D598B72E-EE4E-4169-993B-2B8B4D53CF33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D598B72E-EE4E-4169-993B-2B8B4D53CF33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D598B72E-EE4E-4169-993B-2B8B4D53CF33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D598B72E-EE4E-4169-993B-2B8B4D53CF33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

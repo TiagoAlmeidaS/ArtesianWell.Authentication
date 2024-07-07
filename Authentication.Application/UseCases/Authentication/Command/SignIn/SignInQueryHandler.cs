@@ -2,14 +2,22 @@ using System.Net;
 using Authentication.Application.Services.Authentication;
 using Authentication.Application.Services.Authentication.Dtos;
 using Authentication.Shared.Dto;
+using Authentication.Shared.Exceptions;
 using AutoMapper;
 using MediatR;
 using Shared.Messages;
 
 namespace Authentication.Application.UseCases.Authentication.Command.SignIn;
 
-public class SignInQueryHandler(IAuthenticationService service, IMapper mapper, IMessageHandlerService msg): IRequestHandler<SignInQuery, ApiResponse<SignInResult>>
+public class SignInQueryHandler: IRequestHandler<SignInQuery, ApiResponse<SignInResult>>
 {
+    private readonly IAuthenticationService service;
+    private readonly IMapper mapper;
+    public SignInQueryHandler(IAuthenticationService service, IMapper mapper)
+    {
+        this.service = service;
+        this.mapper = mapper;
+    }
     public async Task<ApiResponse<SignInResult>> Handle(SignInQuery request, CancellationToken cancellationToken)
     {
         try
@@ -25,17 +33,11 @@ public class SignInQueryHandler(IAuthenticationService service, IMapper mapper, 
 
             if (response.HasError)
             {
-                msg.AddError()
-                    .WithErrorCode(Guid.NewGuid().ToString())
-                    .WithMessage(response.GetFirstErrorMessage())
-                    .WithStatusCode((HttpStatusCode) response.GetFirtsErrorCode())
-                    .Commit();
-
-                return ApiResponse<SignInResult>.Error(new()
+                throw new BadRequestException(ApiResponse<SignInResult>.Error(new()
                 {
                     ErrorCode = response.GetFirtsErrorCode(),
                     ErrorMessage = response.GetFirstErrorMessage()
-                });
+                }));
             }
 
             var result = mapper.Map<LoginDtoResponse, SignInResult>(response.Data);
@@ -46,18 +48,11 @@ public class SignInQueryHandler(IAuthenticationService service, IMapper mapper, 
         }
         catch (Exception e)
         {
-            msg.AddError()
-                .WithErrorCode(Guid.NewGuid().ToString())
-                .WithMessage($"Erro ao registrar o cliente.")
-                .WithStackTrace(e.StackTrace)
-                .WithStatusCode(HttpStatusCode.BadRequest)
-                .Commit();
-
-            return ApiResponse<SignInResult>.Error(new()
+            throw new BadRequestException(ApiResponse<SignInResult>.Error(new()
             {
                 ErrorCode = (int) HttpStatusCode.InternalServerError,
                 ErrorMessage = "Erro ao registrar o cliente"
-            });
+            }));
         }
     }
 }

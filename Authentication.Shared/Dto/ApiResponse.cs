@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace Authentication.Shared.Dto;
 
 public class ApiResponse<T>
@@ -11,9 +13,11 @@ public class ApiResponse<T>
     public string GetFirstErrorMessage() => Errors.FirstOrDefault()?.ErrorMessage ?? string.Empty;
     public int GetFirtsErrorCode() => Errors.FirstOrDefault().ErrorCode;
 
-    public static ApiResponse<T> Success(T response)
+    public HttpStatusCode? StatusCode { get; set; }
+
+public static ApiResponse<T> Success(T response, HttpStatusCode httpStatusCode = HttpStatusCode.OK)
     {
-        return new ApiResponse<T> { Data = response, Errors = new List<ApiError>(), Warnings = new List<ApiWarning>() };
+        return new ApiResponse<T> { Data = response, Errors = new List<ApiError>(), Warnings = new List<ApiWarning>(), StatusCode = httpStatusCode};
     }
 
     public static ApiResponse<T> Error(ApiError errors)

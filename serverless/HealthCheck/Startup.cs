@@ -31,8 +31,8 @@ public class Startup
 
         services.AddControllers();
         services.AddHttpClient();
-        services.InfraServiceExtension(configuration);
         services.ApplicationExtension();
+        services.InfraServiceExtension(configuration);
         services.AddMessageHandling();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -58,6 +58,7 @@ public class Startup
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         
+        Console.WriteLine("Estou realizando a inserção de dados no StartUp");
         ServiceProvider = services.BuildServiceProvider();
     }
 }

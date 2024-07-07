@@ -13,7 +13,7 @@ namespace Auth;
 [LambdaStartup]
 public class Startup
 {
-    public static IServiceProvider ServiceProvider { get; private set; }
+    public IServiceProvider ServiceProvider { get; private set; }
     /// <summary>
     /// Services for Lambda functions can be registered in the services dependency injection container in this method. 
     ///
