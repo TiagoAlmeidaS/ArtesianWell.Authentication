@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: Authentication.Presentation/Dockerfile
     ports:
-      - 8080:8083
+      - 8081:8083
     environment:
         - ASPNETCORE_ENVIRONMENT=Development
         - ASPNETCORE_URLS=http://+:8083

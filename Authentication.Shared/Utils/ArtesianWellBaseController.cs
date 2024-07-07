@@ -16,7 +16,7 @@ public class ArtesianWellBaseController: ControllerBase
         _errorWarningHandlingService = errorWarningHandlingService;
     }
 
-    protected IActionResult HandleResult<T>(T result)
+    public IActionResult HandleResult<T>(T result)
     {
         var formatedResult = result.MakeResponse(_errorWarningHandlingService);
 

@@ -1,15 +1,16 @@
 using System.Net;
 using Authentication.Application.Services.Authentication;
 using Authentication.Application.Services.Authentication.Dtos;
+using Authentication.Shared.Dto;
 using AutoMapper;
 using MediatR;
 using Shared.Messages;
 
 namespace Authentication.Application.UseCases.Authentication.Command.SignIn;
 
-public class SignInQueryHandler(IAuthenticationService service, IMapper mapper, IMessageHandlerService msg): IRequestHandler<SignInQuery, SignInResult>
+public class SignInQueryHandler(IAuthenticationService service, IMapper mapper, IMessageHandlerService msg): IRequestHandler<SignInQuery, ApiResponse<SignInResult>>
 {
-    public async Task<SignInResult> Handle(SignInQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<SignInResult>> Handle(SignInQuery request, CancellationToken cancellationToken)
     {
         try
         {
@@ -26,19 +27,22 @@ public class SignInQueryHandler(IAuthenticationService service, IMapper mapper, 
             {
                 msg.AddError()
                     .WithErrorCode(Guid.NewGuid().ToString())
-                    .WithMessage($"Erro ao registrar o cliente.")
-                    .WithStackTrace(response.GetFirstErrorMessage())
+                    .WithMessage(response.GetFirstErrorMessage())
                     .WithStatusCode((HttpStatusCode) response.GetFirtsErrorCode())
                     .Commit();
 
-                return new();
+                return ApiResponse<SignInResult>.Error(new()
+                {
+                    ErrorCode = response.GetFirtsErrorCode(),
+                    ErrorMessage = response.GetFirstErrorMessage()
+                });
             }
 
             var result = mapper.Map<LoginDtoResponse, SignInResult>(response.Data);
 
             result.Email = request.Key;
 
-            return result;
+            return ApiResponse<SignInResult>.Success(result);
         }
         catch (Exception e)
         {
@@ -49,7 +53,11 @@ public class SignInQueryHandler(IAuthenticationService service, IMapper mapper, 
                 .WithStatusCode(HttpStatusCode.BadRequest)
                 .Commit();
 
-            return new();
+            return ApiResponse<SignInResult>.Error(new()
+            {
+                ErrorCode = (int) HttpStatusCode.InternalServerError,
+                ErrorMessage = "Erro ao registrar o cliente"
+            });
         }
     }
 }
