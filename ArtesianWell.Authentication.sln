@@ -26,6 +26,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "serverless", "serverless", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.Function", "Authentication.Function\Authentication.Function.csproj", "{D598B72E-EE4E-4169-993B-2B8B4D53CF33}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LambdaASP.NETCoreWebAPI1", "LambdaASP.NETCoreWebAPI1\src\LambdaASP.NETCoreWebAPI1\LambdaASP.NETCoreWebAPI1.csproj", "{7CD1E1AA-1A0C-40C2-A9B2-6338F0900F22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.Presentation.WebServerless", "Authentication.Presentation.WebServerless\src\Authentication.Presentation.WebServerless\Authentication.Presentation.WebServerless.csproj", "{D508F911-63E4-40EA-A3C2-766A11776F76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,5 +88,13 @@ Global
 		{D598B72E-EE4E-4169-993B-2B8B4D53CF33}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D598B72E-EE4E-4169-993B-2B8B4D53CF33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D598B72E-EE4E-4169-993B-2B8B4D53CF33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CD1E1AA-1A0C-40C2-A9B2-6338F0900F22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CD1E1AA-1A0C-40C2-A9B2-6338F0900F22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CD1E1AA-1A0C-40C2-A9B2-6338F0900F22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CD1E1AA-1A0C-40C2-A9B2-6338F0900F22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D508F911-63E4-40EA-A3C2-766A11776F76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D508F911-63E4-40EA-A3C2-766A11776F76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D508F911-63E4-40EA-A3C2-766A11776F76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D508F911-63E4-40EA-A3C2-766A11776F76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

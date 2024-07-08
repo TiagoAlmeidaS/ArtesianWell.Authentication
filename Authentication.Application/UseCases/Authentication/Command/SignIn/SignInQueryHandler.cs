@@ -1,6 +1,7 @@
 using System.Net;
 using Authentication.Application.Services.Authentication;
 using Authentication.Application.Services.Authentication.Dtos;
+using Authentication.Shared.Common;
 using Authentication.Shared.Dto;
 using Authentication.Shared.Exceptions;
 using AutoMapper;
@@ -9,16 +10,18 @@ using Shared.Messages;
 
 namespace Authentication.Application.UseCases.Authentication.Command.SignIn;
 
-public class SignInQueryHandler: IRequestHandler<SignInQuery, ApiResponse<SignInResult>>
+public class SignInQueryHandler: IRequestHandler<SignInQuery, SignInResult>
 {
     private readonly IAuthenticationService service;
     private readonly IMapper mapper;
-    public SignInQueryHandler(IAuthenticationService service, IMapper mapper)
+    private readonly IMessageHandlerService msg;
+    public SignInQueryHandler(IAuthenticationService service, IMapper mapper, IMessageHandlerService msg)
     {
         this.service = service;
         this.mapper = mapper;
+        this.msg = msg;
     }
-    public async Task<ApiResponse<SignInResult>> Handle(SignInQuery request, CancellationToken cancellationToken)
+    public async Task<SignInResult> Handle(SignInQuery request, CancellationToken cancellationToken)
     {
         try
         {
@@ -33,26 +36,33 @@ public class SignInQueryHandler: IRequestHandler<SignInQuery, ApiResponse<SignIn
 
             if (response.HasError)
             {
-                throw new BadRequestException(ApiResponse<SignInResult>.Error(new()
-                {
-                    ErrorCode = response.GetFirtsErrorCode(),
-                    ErrorMessage = response.GetFirstErrorMessage()
-                }));
+                msg
+                    .AddError()
+                    .WithMessage(response.GetFirstErrorMessage())
+                    .WithStatusCode((HttpStatusCode) response.GetFirtsErrorCode())
+                    .WithErrorCode(Guid.NewGuid().ToString())
+                    .Commit();
+
+                return new();
             }
 
             var result = mapper.Map<LoginDtoResponse, SignInResult>(response.Data);
 
             result.Email = request.Key;
 
-            return ApiResponse<SignInResult>.Success(result);
+            return result;
         }
         catch (Exception e)
         {
-            throw new BadRequestException(ApiResponse<SignInResult>.Error(new()
-            {
-                ErrorCode = (int) HttpStatusCode.InternalServerError,
-                ErrorMessage = "Erro ao registrar o cliente"
-            }));
+            msg
+                .AddError()
+                .WithMessage(MessagesConsts.ErrorDefault)
+                .WithStatusCode(HttpStatusCode.UnprocessableEntity)
+                .WithStackTrace(e.StackTrace)
+                .WithErrorCode(Guid.NewGuid().ToString())
+                .Commit();
+
+            return new();
         }
     }
 }

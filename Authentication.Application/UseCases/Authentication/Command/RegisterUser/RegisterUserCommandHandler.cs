@@ -1,6 +1,7 @@
 using System.Net;
 using Authentication.Application.Services.Authentication;
 using Authentication.Application.Services.Authentication.Dtos;
+using Authentication.Shared.Common;
 using Authentication.Shared.Dto;
 using Authentication.Shared.Exceptions;
 using AutoMapper;
@@ -38,11 +39,14 @@ public class RegisterUserCommandHandler: IRequestHandler<RegisterUserCommand, Re
 
             if (response.HasError)
             {
-                throw new BadRequestException(ApiResponse<RegisterUserResult>.Error(new ()
-                {
-                    ErrorCode = response.GetFirtsErrorCode(),
-                    ErrorMessage = response.GetFirstErrorMessage()
-                }));
+                msg
+                    .AddError()
+                    .WithMessage(response.GetFirstErrorMessage())
+                    .WithStatusCode((HttpStatusCode) response.GetFirtsErrorCode())
+                    .WithErrorCode(Guid.NewGuid().ToString())
+                    .Commit();
+
+                return new();
             }
         
             var result = mapper.Map<SignUpDtoResponse, RegisterUserResult>(response.Data);
@@ -54,10 +58,15 @@ public class RegisterUserCommandHandler: IRequestHandler<RegisterUserCommand, Re
         }
         catch (Exception e)
         {
-            throw new BadRequestException(ApiResponse<RegisterUserResult>.Error(new ()
-            {
-                ErrorMessage = "Erro ao registrar usuário."
-            }));
+            msg
+                .AddError()
+                .WithMessage(MessagesConsts.ErrorDefault)
+                .WithStatusCode(HttpStatusCode.UnprocessableEntity)
+                .WithErrorCode(Guid.NewGuid().ToString())
+                .WithStackTrace(e.StackTrace)
+                .Commit();
+
+            return new();
         }
     }
 }
