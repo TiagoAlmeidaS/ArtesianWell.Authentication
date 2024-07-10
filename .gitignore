@@ -366,4 +366,6 @@ FodyWeavers.xsd
 
 # File generate by MacOS
 ./.DS_Store
-*.DS_Store
+*.DS_Store`
+
+**/.aws-sam/*
