@@ -2,8 +2,6 @@ using System.Net;
 using Authentication.Application.Services.Authentication;
 using Authentication.Application.Services.Authentication.Dtos;
 using Authentication.Shared.Common;
-using Authentication.Shared.Dto;
-using Authentication.Shared.Exceptions;
 using AutoMapper;
 using MediatR;
 using Shared.Messages;
@@ -48,13 +46,8 @@ public class RegisterUserCommandHandler: IRequestHandler<RegisterUserCommand, Re
 
                 return new();
             }
-        
-            var result = mapper.Map<SignUpDtoResponse, RegisterUserResult>(response.Data);
 
-            result.Name = request.Name;
-            result.Email = request.Email;
-
-            return result;
+            return new();
         }
         catch (Exception e)
         {

@@ -8,62 +8,72 @@ using Authentication.Infra.Service.Clients.Keycloak;
 using Authentication.Infra.Service.Clients.Keycloak.Dtos;
 using Authentication.Shared.Common;
 using Authentication.Shared.Dto;
-using Authentication.Shared.Exceptions;
 using Authentication.Shared.Utils;
 using AutoMapper;
 using Microsoft.Extensions.Options;
+using Shared.Messages;
 
 namespace Authentication.Infra.Service.Services;
 
-public class AuthenticationService
+public class AuthenticationService(IMessageHandlerService msg, IMapper mapper, IHttpClientFactory httpClientFactory, IOptions<KeycloakConfig> keycloakConfig, JsonSerializerOptions jsonSerializerOptions)
     : IAuthenticationService
 {
-    private HttpClient _httpClient;
-    private HttpClient _httpClientAuthentication;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
-    private readonly IMapper _mapper;
-    private readonly KeycloakConfig _keycloakConfig;
-    
-    
-    public AuthenticationService(IHttpClientFactory httpClientFactory, JsonSerializerOptions jsonSerializerOptions, IMapper mapper, IOptions<KeycloakConfig> keycloakConfig)
-    {
-        _httpClient = httpClientFactory.CreateClient(KeycloakConsts.GetNameApi);
-        _httpClientAuthentication = httpClientFactory.CreateClient(KeycloakConsts.GetNameApiToken);
-        _jsonSerializerOptions = jsonSerializerOptions;
-        _mapper = mapper;
-        _keycloakConfig = keycloakConfig.Value;
-    }
+    private HttpClient _httpClient = httpClientFactory.CreateClient(KeycloakConsts.GetNameApi);
+    private HttpClient _httpClientAuthentication = httpClientFactory.CreateClient(KeycloakConsts.GetNameApiToken);
     
 
     public async Task<ApiResponse<LoginDtoResponse>> Login(LoginDtoRequest request, CancellationToken cancellationToken)
     {
-        var loginRequestKeycloak = new LoginRequestKeycloakDto()
+        try
         {
-            GrantType = AuthenticationConsts.GetAuthenticationType(AuthenticationTypes.Password),
-            Username = request.Key,
-            Password = request.Password
-        };
-
-        var formContent =
-            ContentsUtils.GetHttpContent(loginRequestKeycloak, _jsonSerializerOptions, ContentType.FormUrlEncoded);
-
-        var keycloakResponse = await _httpClient.PostAsync(KeycloakConsts.GetPathAuthorization, formContent);
-
-        if (!keycloakResponse.IsSuccessStatusCode)
-        {
-            var errorContent = await keycloakResponse.Content.ReadAsStringAsync();
-            throw new BadRequestException(ApiResponse<LoginDtoResponse>.Error(new()
+            var loginRequestKeycloak = new LoginRequestKeycloakDto()
             {
-                ErrorCode = (int)HttpStatusCode.Unauthorized,
-                ErrorMessage = $"Credenciais inválidas: {errorContent}"
-            }));
-        }
+                grant_type = AuthenticationConsts.GetAuthenticationType(AuthenticationTypes.Password),
+                client_secret = keycloakConfig.Value.ClientSecret,
+                client_id = keycloakConfig.Value.ClientId,
+                username = request.Key,
+                password = request.Password
+            };
+            
+            var bodyContent = ContentsUtils.GetHttpContent(loginRequestKeycloak, jsonSerializerOptions, ContentType.FormUrlEncoded);
+            
+            var keycloakResponse = await _httpClient.PostAsync(KeycloakConsts.GetPathAuthorization, bodyContent);
 
-        var responseContent = await keycloakResponse.Content.ReadAsStringAsync();
-        var keycloakResponseJson = JsonSerializer.Deserialize<AuthenticationJsonDto>(responseContent, _jsonSerializerOptions);
-        var loginResponse = _mapper.Map<LoginDtoResponse>(keycloakResponseJson);
-        
-        return ApiResponse<LoginDtoResponse>.Success(loginResponse, keycloakResponse.StatusCode);
+            if (!keycloakResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await keycloakResponse.Content.ReadAsStringAsync();
+                msg
+                    .AddError()
+                    .WithMessage($"Credenciais inválidas: {errorContent}")
+                    .WithStatusCode(HttpStatusCode.Unauthorized)
+                    .WithErrorCode(Guid.NewGuid().ToString())
+                    .Commit();
+                return ApiResponse<LoginDtoResponse>.Error(new()
+                {
+                    ErrorCode = (int)HttpStatusCode.Unauthorized,
+                    ErrorMessage = $"Credenciais inválidas: {errorContent}"
+                });
+            }
+
+            var responseContent = await keycloakResponse.Content.ReadAsStringAsync();
+            var keycloakResponseJson =
+                JsonSerializer.Deserialize<AuthenticationJsonDto>(responseContent, jsonSerializerOptions);
+            var loginResponse = mapper.Map<LoginDtoResponse>(keycloakResponseJson);
+
+            return ApiResponse<LoginDtoResponse>.Success(loginResponse, keycloakResponse.StatusCode);
+        }
+        catch (Exception e)
+        {
+            msg
+                .AddError()
+                .WithMessage(MessagesConsts.ErrorDefault)
+                .WithStatusCode(HttpStatusCode.InternalServerError)
+                .WithStackTrace(e.StackTrace)
+                .WithErrorCode(Guid.NewGuid().ToString())
+                .Commit();
+
+            return new ApiResponse<LoginDtoResponse>();
+        }
     }
 
     public async Task<ApiResponse<SignUpDtoResponse>> SignUp(SignUpDtoRequest request,
@@ -104,29 +114,33 @@ public class AuthenticationService
 
             if (userResponse.StatusCode != HttpStatusCode.OK && userResponse.StatusCode != HttpStatusCode.Created)
             {
-                throw new Exception("Não foi possível criar esse usuário");
+                msg
+                    .AddError()
+                    .WithMessage(content)
+                    .WithStatusCode(userResponse.StatusCode)
+                    .WithErrorCode(Guid.NewGuid().ToString())
+                    .Commit();
+
+                return ApiResponse<SignUpDtoResponse>.Error(new ()
+                {
+                    ErrorCode = (int) userResponse.StatusCode,
+                    ErrorMessage = content
+                });
             }
             
-            var keycloakResponseJson = JsonSerializer.Deserialize<AuthenticationJsonDto>(content, jsonSerializerOptions);
-
-            var resultRegisterMapper = new SignUpDtoResponse()
-            {
-                Name = request.Name,
-                Token = keycloakResponseJson.AccessToken,
-                RefreshToken = keycloakResponseJson.RefreshToken,
-                TokenExpiration = keycloakResponseJson.ExpiresIn,
-                Scope = keycloakResponseJson.Scope
-            };
-        
-            return ApiResponse<SignUpDtoResponse>.Success(resultRegisterMapper, userResponse.StatusCode);
+            return ApiResponse<SignUpDtoResponse>.Success(new (), userResponse.StatusCode);
         }
         catch (Exception e)
         {
-            throw new BadRequestException(ApiResponse<SignUpDtoResponse>.Error(new()
-            {
-                ErrorCode = (int)HttpStatusCode.InternalServerError,
-                ErrorMessage = e.Message
-            }));
+            msg
+                .AddError()
+                .WithMessage(MessagesConsts.ErrorDefault)
+                .WithStatusCode(HttpStatusCode.InternalServerError)
+                .WithErrorCode(Guid.NewGuid().ToString())
+                .WithStackTrace(e.StackTrace)
+                .Commit();
+
+            return new ApiResponse<SignUpDtoResponse>();
         }
     }
 
@@ -134,15 +148,17 @@ public class AuthenticationService
     {
         try
         {
+            var keycloak = keycloakConfig.Value;
+            
             var tokenRequest = KeycloakConsts.GetFormUrlAuthorizationKeycloak(new()
             {
-                GrantType = _keycloakConfig.GrantType,
-                Password = _keycloakConfig.Password,
-                UserName = _keycloakConfig.Username,
-                ClientId = _keycloakConfig.ClientId
+                GrantType = keycloak.GrantType,
+                Password = keycloak.Password,
+                UserName = keycloak.Username,
+                ClientId = keycloak.AdminId
             });
 
-            var tokenResponse = await _httpClientAuthentication.PostAsync(KeycloakConsts.GetPathAuthorization, tokenRequest);
+            var tokenResponse = await _httpClientAuthentication.PostAsync(KeycloakConsts.GetPathToken, tokenRequest);
             if (!tokenResponse.IsSuccessStatusCode)
             {
                 var errorContent = await tokenResponse.Content.ReadAsStringAsync();
@@ -155,8 +171,14 @@ public class AuthenticationService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            msg
+                .AddError()
+                .WithMessage(MessagesConsts.ErrorDefault)
+                .WithStatusCode(HttpStatusCode.InternalServerError)
+                .WithErrorCode(Guid.NewGuid().ToString())
+                .Commit();
+            
+            return String.Empty;
         }
     }
 

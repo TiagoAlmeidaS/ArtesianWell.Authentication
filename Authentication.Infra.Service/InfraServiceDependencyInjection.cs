@@ -58,8 +58,6 @@ public static class InfraServiceDependencyInjection
 
         services.AddHttpClient(KeycloakConsts.GetNameApi, client =>
         {
-            client.DefaultRequestHeaders.Add(CommonConsts.Headers.Accept,
-                CommonConsts.Headers.AcceptJsonContentValue);
             client.Timeout = TimeSpan.FromSeconds(apiKeycloak.Value.Timeout);
             client.BaseAddress = new Uri(apiKeycloak.Value.BaseUrl);
         });
