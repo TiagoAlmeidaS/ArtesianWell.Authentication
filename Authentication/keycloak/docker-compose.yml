@@ -1,44 +1,21 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:13
-    container_name: postgres
-    environment:
-      POSTGRES_DB: keycloakdb
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloakpassword
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloakdb -h postgres -p 5432"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  keycloak:
+  authentication:
     image: bitnami/keycloak
     restart: always
-    container_name: keycloak
+    container_name: authentication
     environment:
       KEYCLOAK_ADMIN_USER: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KEYCLOAK_DATABASE_HOST: postgres
+      KEYCLOAK_ADMIN_PASSWORD: A7wY8jK2
+      KEYCLOAK_DATABASE_HOST: keycloakdb.c3y26so8qgto.us-east-2.rds.amazonaws.com
       KEYCLOAK_DATABASE_PORT: 5432
       KEYCLOAK_DATABASE_NAME: keycloakdb
       KEYCLOAK_DATABASE_USER: keycloak
-      KEYCLOAK_DATABASE_PASSWORD: keycloakpassword
+      KEYCLOAK_DATABASE_PASSWORD: A7wY8jK2
       KEYCLOAK_EXTRA_ARGS: --import-realm
     volumes:
       - ./config/:/opt/bitnami/keycloak/data/import
     ports:
-      - "8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-volumes:
-  postgres_data:
-  kong_data:
+      - "8081:8080"
+      - "8443:8443"
