@@ -86,7 +86,18 @@ public static class InfraServiceDependencyInjection
     private static IServiceCollection
         AddConfiguration(this IServiceCollection services, IConfiguration configuration) =>
         services
-            .Configure<KeycloakConfig>(configuration.GetSection(nameof(KeycloakConfig)));
+            .Configure<KeycloakConfig>(config =>
+            {
+                config.ClientId = Environment.GetEnvironmentVariable("KEYCLOAK_ClientId") ?? configuration[$"{nameof(KeycloakConfig)}:ClientId"];
+                config.AdminId = Environment.GetEnvironmentVariable("KEYCLOAK_AdminId") ?? configuration[$"{nameof(KeycloakConfig)}:AdminId"];
+                config.BaseUrl = Environment.GetEnvironmentVariable("KEYCLOAK_BaseUrl") ?? configuration[$"{nameof(KeycloakConfig)}:BaseUrl"];
+                config.BaseUrlAuthorization = Environment.GetEnvironmentVariable("KEYCLOAK_BaseUrlAuthorization") ?? configuration[$"{nameof(KeycloakConfig)}:BaseUrlAuthorization"];
+                config.ClientSecret = Environment.GetEnvironmentVariable("KEYCLOAK_ClientSecret") ?? configuration[$"{nameof(KeycloakConfig)}:ClientSecret"];
+                config.Timeout = int.TryParse(Environment.GetEnvironmentVariable("KEYCLOAK_Timeout"), out var timeout) ? timeout : configuration.GetValue<int>($"{nameof(KeycloakConfig)}:Timeout", 15);
+                config.GrantType = Environment.GetEnvironmentVariable("KEYCLOAK_GrantType") ?? configuration[$"{nameof(KeycloakConfig)}:GrantType"];
+                config.Username = Environment.GetEnvironmentVariable("KEYCLOAK_Username") ?? configuration[$"{nameof(KeycloakConfig)}:Username"];
+                config.Password = Environment.GetEnvironmentVariable("KEYCLOAK_Password") ?? configuration[$"{nameof(KeycloakConfig)}:Password"];
+            });
 
     private static IServiceCollection AddGlobalConfiguration(this IServiceCollection services)
         => services.AddSingleton(new JsonSerializerOptions
